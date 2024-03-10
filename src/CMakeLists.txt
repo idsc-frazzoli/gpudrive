@@ -77,4 +77,4 @@ if (TARGET madrona_viewer)
 endif()
 
 add_executable(headless headless.cpp)
-target_link_libraries(headless gpudrive_mgr)
+target_link_libraries(headless madrona_mw_core gpudrive_mgr)
