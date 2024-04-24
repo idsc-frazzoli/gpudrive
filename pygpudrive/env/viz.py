@@ -43,6 +43,12 @@ class Visualizer:
     GOAL_RADIUS = 2
     BACKGROUND_COLOR = (0, 0, 0)
 
+    ROAD_COLOR_DICT = {
+        float(gpudrive.EntityType.RoadEdge): (0, 0, 0), # Black
+        float(gpudrive.EntityType.RoadLane): (255,0,0), # Red
+        float(gpudrive.EntityType.RoadLine): (0,255,0), # Green
+    }
+
     def __init__(self, agent_count, human_render=True):
         self.human_render = human_render
 
@@ -84,6 +90,15 @@ class Visualizer:
 
     def _create_image_array(self, surf):
         return np.transpose(np.array(pygame.surfarray.pixels3d(surf)), axes=(1, 0, 2))
+    
+    def get_endpoints(self, map_obj):
+        center_pos = map_obj[:2]
+        length = map_obj[2]  # Already half the length
+        yaw = map_obj[5]
+
+        start = center_pos - np.array([length * np.cos(yaw), length * np.sin(yaw)])
+        end = center_pos + np.array([length * np.cos(yaw), length * np.sin(yaw)])
+        return start, end
 
     def draw(self, positions, rotations, goals, mask, map_info):
         self.screen.fill(self.BACKGROUND_COLOR)

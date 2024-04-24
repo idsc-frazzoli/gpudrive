@@ -44,7 +44,7 @@ class Env(gym.Env):
         data_dir,
         device="cuda",
         auto_reset=False,
-        render_mode="human",
+        render_mode="rgb_array",
         verbose=True,
     ):
         self.config = config
@@ -71,11 +71,6 @@ class Env(gym.Env):
         self.num_sims = num_worlds
         self.device = device
         self.action_types = 3  # Acceleration, steering, and heading
-
-        # TODO: @AP / @SK: Allow for num_worlds < num_files
-        assert num_worlds == len(
-            glob.glob(f"{data_dir}/*.json")
-        ), "Number of worlds is not equal to the number of files in the data directory."
 
         if not os.path.exists(data_dir) or not os.listdir(data_dir):
             assert False, "The data directory does not exist or is empty."
@@ -409,7 +404,7 @@ if __name__ == "__main__":
         config=config,
         num_worlds=1,
         max_cont_agents=NUM_CONT_AGENTS,  # Number of agents to control
-        data_dir="/home/samk/gpudrive/waymo_data",
+        data_dir="/home/aarav/gpudrive/nocturne_data",
         device="cpu",
     )
 
@@ -441,7 +436,10 @@ if __name__ == "__main__":
             print(f"RESETTING ENVIRONMENT\n")
 
         frame = env.render()
-        # frames.append(frame.T)
+        frames.append(frame)
+    
+    import imageio
+    imageio.mimsave("test.gif", frames)
 
     # Log video
     # wandb.log({"scene": wandb.Video(np.array(frames), fps=10, format="gif")})
