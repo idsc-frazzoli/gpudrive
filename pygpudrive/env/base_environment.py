@@ -355,7 +355,9 @@ class Env(gym.Env):
 
         render_mask = create_render_mask()
 
-        return self.visualizer.draw(agent_pos, agent_rot, goal_pos, render_mask)
+        map_info = self.sim.map_observation_tensor().to_torch()[self.world_render_idx].cpu().numpy()
+
+        return self.visualizer.draw(agent_pos, agent_rot, goal_pos, render_mask, map_info)
 
     def normalize_ego_state(self, state):
         """Normalize ego state features."""

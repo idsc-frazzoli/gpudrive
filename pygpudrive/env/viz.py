@@ -3,7 +3,7 @@ from pygame import Color
 import numpy as np
 from pygame.sprite import Sprite
 import os
-
+import gpudrive
 
 class Agent(Sprite):
     def __init__(self, screen, base_image):
@@ -85,7 +85,7 @@ class Visualizer:
     def _create_image_array(self, surf):
         return np.transpose(np.array(pygame.surfarray.pixels3d(surf)), axes=(1, 0, 2))
 
-    def draw(self, positions, rotations, goals, mask):
+    def draw(self, positions, rotations, goals, mask, map_info):
         self.screen.fill(self.BACKGROUND_COLOR)
 
         # agent_pos_mean = np.mean(positions, axis=0, where=np.expand_dims(mask, axis=1))
@@ -115,6 +115,23 @@ class Visualizer:
                 ),
                 radius=self.GOAL_RADIUS,
             )
+
+        for idx, map_obj in enumerate(map_info):
+            if map_obj[-1] == float(gpudrive.EntityType._None):
+                continue
+            elif map_obj[-1] < float(gpudrive.EntityType.CrossWalk):
+                start, end = self.get_endpoints(map_obj)
+                start = self.scale_coords(start, agent_pos_mean[0], agent_pos_mean[1])
+                end = self.scale_coords(end, agent_pos_mean[0], agent_pos_mean[1])
+                pygame.draw.line(
+                    self.screen,
+                    self.ROAD_COLOR_DICT[map_obj[-1]],
+                    start,
+                    end,
+                    2
+                )
+        
+        
 
         if self.human_render:
             self.clock.tick(30)  # Limit to 30 FPS
