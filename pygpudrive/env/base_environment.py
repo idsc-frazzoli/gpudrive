@@ -1,5 +1,7 @@
 """Base Gym Environment that interfaces with the GPU Drive simulator."""
 
+import time
+
 from gymnasium.spaces import Box, Discrete
 import numpy as np
 import torch

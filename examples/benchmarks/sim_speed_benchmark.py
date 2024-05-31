@@ -35,7 +35,7 @@ def make_sim(
     # Create an instance of Parameters
     params = gpudrive.Parameters()
     params.polylineReductionThreshold = 0.5
-    params.observationRadius = 10.0
+    params.observationRadius = 100.0
     params.collisionBehaviour = gpudrive.CollisionBehaviour.AgentRemoved
     params.datasetInitOptions = gpudrive.DatasetInitOptions.FirstN
     params.rewardParams = reward_params

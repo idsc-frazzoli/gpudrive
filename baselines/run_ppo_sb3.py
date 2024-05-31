@@ -28,17 +28,17 @@ if __name__ == "__main__":
         partner_obs=True,
         norm_obs=True,
         road_obs_algorithm="k_nearest_roadpoints",
-        sample_method="pad_n",
+        sample_method="rand_n",
     )
 
     exp_config = ExperimentConfig(
-        render=False,
+        render=True,
     )
 
     # Make SB3-compatible environment
     env = SB3MultiAgentEnv(
         config=env_config,
-        num_worlds=100,
+        num_worlds=200,
         max_cont_agents=128,
         data_dir=exp_config.data_dir,
         device=exp_config.device,
