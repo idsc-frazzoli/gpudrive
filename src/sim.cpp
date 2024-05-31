@@ -275,7 +275,7 @@ inline void movementSystem(Engine &e,
         return;
     }
 
-    if (type == EntityType::Vehicle && controlledState.controlledState == ControlMode::BICYCLE)
+    if (controlledState.controlledState == ControlMode::BICYCLE)
     {
         // TODO: Handle the case when the agent is not valid. Currently, we are not doing anything.
 
@@ -843,6 +843,7 @@ Sim::Sim(Engine &ctx,
 {
     // Below check is used to ensure that the map is not empty due to incorrect WorldInit copy to GPU
     assert(init.map->numObjects);
+    printf("numRoadSegments: %i", init.map->numRoadSegments);
     assert(init.map->numRoadSegments <= consts::kMaxRoadEntityCount);
 
     // Currently the physics system needs an upper bound on the number of

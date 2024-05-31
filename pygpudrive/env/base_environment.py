@@ -83,6 +83,7 @@ class Env(gym.Env):
         if not os.path.exists(data_dir) or not os.listdir(data_dir):
             assert False, "The data directory does not exist or is empty."
 
+        params.IgnoreNonVehicles = False
         # Initialize the simulator
         self.sim = gpudrive.SimManager(
             exec_mode=gpudrive.madrona.ExecMode.CPU
@@ -267,7 +268,7 @@ class Env(gym.Env):
         if self.config.sample_method == "first_n":
             params.datasetInitOptions = gpudrive.DatasetInitOptions.FirstN
         elif self.config.sample_method == "random":
-            params.datasetInitOptions = gpudrive.DatasetInitOptions.Random
+            params.datasetInitOptions = gpudrive.DatasetInitOptions.RandomN
         elif self.config.sample_method == "pad_n":
             params.datasetInitOptions = gpudrive.DatasetInitOptions.PadN
         elif self.config.sample_method == "exact_n":

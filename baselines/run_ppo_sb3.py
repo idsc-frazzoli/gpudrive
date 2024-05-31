@@ -29,7 +29,7 @@ if __name__ == "__main__":
         partner_obs=True,
         norm_obs=True,
         road_obs_algorithm="k_nearest_roadpoints",
-        sample_method="pad_n",
+        sample_method="random",
     )
 
     exp_config = ExperimentConfig(
