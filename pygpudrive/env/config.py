@@ -43,7 +43,7 @@ class EnvConfig:
     num_controlled_vehicles: int = 128
     road_map_agent_feat_dim: int = num_controlled_vehicles - 1
     top_k_roadpoints: int = 200
-    num_worlds: int = 15
+    num_worlds: int = 100
 
     # Observation space
     ego_state: bool = True  # Ego vehicle state

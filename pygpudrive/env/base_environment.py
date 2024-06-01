@@ -168,7 +168,10 @@ class Env(gym.Env):
         if actions is not None:
             self._apply_actions(actions)
 
+        import time
+        t = time.perf_counter()
         self.sim.step()
+        print(f"fps: {self.num_valid_controlled_agents_across_worlds/(time.perf_counter() - t)}")
 
     def _apply_actions(self, actions):
         """Apply the actions to the simulator."""
