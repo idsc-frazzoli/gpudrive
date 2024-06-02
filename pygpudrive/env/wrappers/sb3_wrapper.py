@@ -35,7 +35,6 @@ class SB3MultiAgentEnv(VecEnv):
         max_cont_agents,
         data_dir,
         device,
-        render_mode="rgb_array",
     ):
         self._env = Env(
             config=config,
@@ -55,7 +54,7 @@ class SB3MultiAgentEnv(VecEnv):
         )
         self.obs_dim = self._env.observation_space.shape[0]
         self.info_dim = self._env.info_dim
-        self.render_mode = render_mode
+        self.render_config = config.render_config
         self.tot_reward_per_episode = torch.zeros((self.num_worlds, self.max_agent_count)).to(self.device)
         self.agent_step = torch.zeros((self.num_worlds, self.max_agent_count)).to(self.device)
         self.actions_tensor = torch.zeros((self.num_worlds, self.max_agent_count)).to(self.device)

@@ -33,10 +33,10 @@ class Env(gym.Env):
         max_cont_agents,
         data_dir,
         device="cuda",
-        render_config: RenderConfig = RenderConfig(),
         verbose=True,
     ):
         self.config = config
+        self.render_config = config.render_config
 
         reward_params = self._set_reward_params()
 
@@ -103,8 +103,6 @@ class Env(gym.Env):
         # TODO(ev)
 
         # Rendering
-        self.render_config = render_config
-        self.world_render_idx = 0
         self.visualizer = PyGameVisualizer(
             self.sim, self.render_config, self.config.dist_to_goal_threshold
         )

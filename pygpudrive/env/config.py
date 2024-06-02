@@ -1,11 +1,15 @@
 """Configs for GPU Drive Environments."""
 
 from dataclasses import dataclass
-import numpy as np
-import torch
 from enum import Enum
 from typing import Tuple
+import numpy as np
+import torch
 
+class RenderType(Enum):
+    WORST_VIDEO = "worst_video"
+    RANDOM_VIDEO = "random_video"
+    FIRST_VIDEO = "first_video"
 
 class RenderMode(Enum):
     PYGAME_ABSOLUTE = "pygame_absolute"
@@ -27,12 +31,17 @@ class MadronaOption(Enum):
 
 @dataclass
 class RenderConfig:
+    render: bool = False
     render_mode: RenderMode = RenderMode.PYGAME_ABSOLUTE
+    render_type: RenderType = RenderType.WORST_VIDEO
     view_option: Enum = PygameOption.RGB
+    render_freq: int = 10
+    render_n_worlds: int = 1
     resolution: Tuple[int, int] = (256, 256)
 
     def __str__(self):
         return f"RenderMode: {self.render_mode.value}, ViewOption: {self.view_option.value}, Resolution: {self.resolution}"
+
 
 
 @dataclass
@@ -44,6 +53,9 @@ class EnvConfig:
     road_map_agent_feat_dim: int = num_controlled_vehicles - 1
     top_k_roadpoints: int = 200
     num_worlds: int = 15
+    
+    # Rendering settings
+    render_config: RenderConfig = RenderConfig()
 
     # Observation space
     ego_state: bool = True  # Ego vehicle state

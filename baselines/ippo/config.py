@@ -1,6 +1,6 @@
-from networks.perm_eq_late_fusion import LateFusionNet, LateFusionPolicy
 from dataclasses import dataclass
-import torch
+
+from networks.perm_eq_late_fusion import LateFusionNet, LateFusionPolicy
 
 
 @dataclass
@@ -12,12 +12,6 @@ class ExperimentConfig:
 
     # Dataset
     data_dir: str = "waymo_data"
-
-    # Rendering settings
-    render: bool = False
-    render_mode: str = "rgb_array"
-    render_freq: int = 10  # Render after every kth rollout
-    render_n_worlds: int = 1
 
     # Logging
     use_wandb: bool = True
