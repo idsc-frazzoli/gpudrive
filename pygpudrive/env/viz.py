@@ -455,7 +455,7 @@ class PyGameVisualizer:
                     gpudrive.EntityType._None
                 ):
                     continue
-
+                
                 agent_corners = PyGameVisualizer.compute_agent_corners(
                     agent_pos[agent_idx],
                     agent_sizes[agent_idx, 1],
