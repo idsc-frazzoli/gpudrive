@@ -17,7 +17,13 @@ class ExperimentConfig:
     render: bool = True
     render_mode: str = "rgb_array"
     render_freq: int = 10  # Render after every kth rollout
-    render_n_worlds: int = 1
+    log_failure_modes_after: int = 1e5  # Set to None to disable
+    log_success_modes_after: int = 1e5  # Set to None to disable
+    render_n_worlds: int = 5  # Number of worlds to render
+    
+    # MODEL CHECKPOINTING
+    save_policy: bool = True
+    save_policy_freq: int = 1000
 
     # Logging
     use_wandb: bool = True

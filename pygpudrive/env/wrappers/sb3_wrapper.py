@@ -53,6 +53,8 @@ class SB3MultiAgentEnv(VecEnv):
         self.observation_space = gym.spaces.Box(
             -np.inf, np.inf, self._env.observation_space.shape, np.float32
         )
+        self.aggregate_world_dict = {}
+        self.log_agg_world_info = False
         self.obs_dim = self._env.observation_space.shape[0]
         self.info_dim = self._env.info_dim
         self.render_mode = render_mode
@@ -215,8 +217,32 @@ class SB3MultiAgentEnv(VecEnv):
             self.tot_reward_per_episode[indices][self.controlled_agent_mask[indices]].sum().item()
         # log the agents that are done but did not receive any reward i.e. truncated
         # TODO(ev) remove hardcoded 91
-        self.info_dict["truncated"] = ((self.agent_step[indices] == 91) * ~self.dead_agent_mask[indices]).sum().item()
+        self.info_dict["truncated"] = (
+            ((self.agent_step[indices] == 91) * ~self.dead_agent_mask[indices])
+            .sum()
+            .item()
+        )
 
+        # Store per world info
+        for (
+            world_idx
+        ) in indices:  # max agents, goal achieved, off road, veh collisions
+            self.aggregate_world_dict[world_idx.item()] = torch.Tensor(
+                [
+                    self.controlled_agent_mask[indices].sum(),
+                    controlled_agent_info[:, 3].sum().item()
+                    / self.controlled_agent_mask[indices].sum().item(),
+                    controlled_agent_info[:, 0].sum().item()
+                    / self.controlled_agent_mask[indices].sum().item(),
+                    controlled_agent_info[:, 1].sum().item()
+                    / self.controlled_agent_mask[indices].sum().item(),
+                ]
+            )
+
+        if len(self.aggregate_world_dict) == self.num_worlds:
+            # Log stats
+            self.log_agg_world_info = True
+            
     def get_attr(self, attr_name, indices=None):
         raise NotImplementedError()
 
