@@ -14,7 +14,7 @@ class ExperimentConfig:
     data_dir: str = "formatted_json_v2_no_tl_train"
 
     # Rendering settings
-    render: bool = False
+    render: bool = True
     render_mode: str = "rgb_array"
     render_freq: int = 10  # Render after every kth rollout
     render_n_worlds: int = 1
@@ -34,9 +34,10 @@ class ExperimentConfig:
     clip_range: float = 0.2
     vf_coef: float = 0.5
     n_steps: int = 92  # Has to be at least > episode_length = 91
-    batch_size: int = 2048
+    batch_size: int = 4096
     verbose: int = 0
     total_timesteps: int = 10e7
+    n_epochs: int = 2
 
     # Network
     mlp_class = LateFusionNet

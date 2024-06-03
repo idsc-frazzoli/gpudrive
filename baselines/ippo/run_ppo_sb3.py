@@ -46,6 +46,7 @@ def train():
     # INITIALIZE IPPO
     model = IPPO(
         n_steps=exp_config.n_steps,
+        n_epochs=exp_config.n_epochs,
         batch_size=exp_config.batch_size,
         env=env,
         seed=exp_config.seed,

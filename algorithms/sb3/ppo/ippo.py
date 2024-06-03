@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import TypeVar
 
 import torch
 from torch.nn import functional as F
@@ -7,6 +8,7 @@ import numpy as np
 from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.type_aliases import MaybeCallback
 from stable_baselines3.common.utils import get_schedule_fn
 from stable_baselines3.common.vec_env import VecEnv
 from torch import nn
@@ -14,6 +16,8 @@ from torch import nn
 # Import masked rollout buffer class
 from algorithms.sb3.rollout_buffer import MaskedRolloutBuffer
 from networks.perm_eq_late_fusion import LateFusionNet
+
+SelfIPPO = TypeVar("SelfIPPO", bound="IPPO")
 
 # From stable baselines
 def explained_variance(
@@ -79,6 +83,7 @@ class IPPO(PPO):
         callback.on_rollout_start()
 
         time_rollout = time.perf_counter()
+        total_steps = 0
 
         while n_steps < n_rollout_steps:
             if (
@@ -126,7 +131,9 @@ class IPPO(PPO):
             new_obs, rewards, dones, infos = env.step(clipped_actions.float())
 
             # EDIT_2: Increment the global step by the number of valid samples in rollout step
-            self.num_timesteps += int((~rewards.isnan()).float().sum().item())
+            observed_steps = int((~rewards.isnan()).float().sum().item())
+            self.num_timesteps += observed_steps
+            total_steps += observed_steps
             # Give access to local variables
             callback.update_locals(locals())
             if callback.on_step() is False:
@@ -148,7 +155,6 @@ class IPPO(PPO):
             self._last_obs = new_obs  # type: ignore[assignment]
             self._last_episode_starts = dones
 
-        total_steps = self.n_envs * n_rollout_steps
         elapsed_time = time.perf_counter() - time_rollout
         fps = total_steps / elapsed_time
         self.logger.record("rollout/fps", fps)
@@ -164,7 +170,7 @@ class IPPO(PPO):
         callback.update_locals(locals())
         callback.on_rollout_end()
 
-        return True
+        return total_steps, True
 
     def _setup_model(self) -> None:
         self._setup_lr_schedule()
@@ -234,7 +240,7 @@ class IPPO(PPO):
             approx_kl_divs = []
             # Do a complete pass on the rollout buffer
             for rollout_data in self.rollout_buffer.get(self.batch_size):
-                observed_data += len(rollout_data)
+                observed_data += len(rollout_data[0])
                 actions = rollout_data.actions
                 if isinstance(self.action_space, spaces.Discrete):
                     # Convert discrete action from float to long
@@ -338,18 +344,22 @@ class IPPO(PPO):
             if not continue_training:
                 break
 
+        print("time cost of training", time.time() - train_time)
+        temp = time.time() - train_time
+        print("thoroughput of training", observed_data / (time.time() - train_time))
         explained_var = explained_variance(
             self.rollout_buffer.values.flatten(),
             self.rollout_buffer.returns.flatten(),
         )
 
+        t_log = time.perf_counter()
         # Logs
         self.logger.record("train/entropy_loss", np.mean(entropy_losses))
         self.logger.record(
             "train/mean_abs_advantages", advantages.abs().mean().item()
         )
         self.logger.record("train/train_throughput", observed_data / (time.time() - train_time))
-        self.logger.record("train/expliained_variance", explained_var)
+        self.logger.record("train/explained_variance", explained_var)
         self.logger.record("train/policy_gradient_loss", np.mean(pg_losses))
         self.logger.record("train/value_loss", np.mean(value_losses))
         self.logger.record("train/approx_kl", np.mean(approx_kl_divs))
@@ -367,3 +377,55 @@ class IPPO(PPO):
         self.logger.record("train/clip_range", clip_range)
         if self.clip_range_vf is not None:
             self.logger.record("train/clip_range_vf", clip_range_vf)
+        print("time to log training", time.perf_counter() - t_log)
+
+    def learn(
+        self: SelfIPPO,
+        total_timesteps: int,
+        callback: MaybeCallback = None,
+        log_interval: int = 1,
+        tb_log_name: str = "IPPO",
+        reset_num_timesteps: bool = True,
+        progress_bar: bool = False,
+    ) -> SelfIPPO:
+        iteration = 0
+
+        total_timesteps, callback = self._setup_learn(
+            total_timesteps,
+            callback,
+            reset_num_timesteps,
+            tb_log_name,
+            progress_bar,
+        )
+
+        self.start_time = time.perf_counter()
+        callback.on_training_start(locals(), globals())
+
+        assert self.env is not None
+
+        while self.num_timesteps < total_timesteps:
+            t_loop = time.perf_counter()
+            total_steps, continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+            self.logger.record("train/rollout_fps", total_steps / (time.perf_counter() - t_loop))
+            print("time to collect", time.perf_counter() - t_loop)
+            if not continue_training:
+                break
+
+            iteration += 1
+            self._update_current_progress_remaining(self.num_timesteps, total_timesteps)
+
+            # Display training infos
+            if log_interval is not None and iteration % log_interval == 0:
+                assert self.ep_info_buffer is not None
+                self._dump_logs(iteration)
+            t_train = time.perf_counter()
+            self.train()
+            print("time to train", time.perf_counter() - t_train)
+            self.logger.record("train/train_fps", total_steps / (time.perf_counter() - t_train))
+            print("total loop time", time.perf_counter() - t_loop)
+            self.logger.record("train/total_fps", self.num_timesteps / (time.perf_counter() - self.start_time))
+            print("total steps observed so far", self.num_timesteps)
+
+        callback.on_training_end()
+
+        return self
