@@ -67,18 +67,19 @@ int main(int argc, char *argv[])
 #endif
 
     WindowManager wm {};
-    WindowHandle window = wm.makeWindow("Escape Room", 640, 480);
+    WindowHandle window = wm.makeWindow("Escape Room", 1920, 1080);
     render::GPUHandle render_gpu = wm.initGPU(0, { window.get() });
 
     Manager mgr({
         .execMode = exec_mode,
         .gpuID = 0,
         .numWorlds = num_worlds,
-        .jsonPath = "tests/testJsons",
+        .jsonPath = "/home/aarav/nocturne_data/formatted_json_v2_no_tl_valid",
         .params = {
             .polylineReductionThreshold = 1.0,
             .observationRadius = 100.0,
-            .maxNumControlledVehicles = 0
+            .maxNumControlledVehicles = 0,
+            .datasetInitOptions = DatasetInitOptions::RandomN,
         },
         .enableBatchRenderer = enable_batch_renderer,
         .extRenderAPI = wm.gpuAPIManager().backend(),
@@ -93,8 +94,8 @@ int main(int argc, char *argv[])
         Viewer viewer(mgr.getRenderManager(), window.get(), {
         .numWorlds = num_worlds,
         .simTickRate = 20,
-        .cameraMoveSpeed = 20.f,
-        .cameraPosition = 100.f * math::up,
+        .cameraMoveSpeed = 100.f,
+        .cameraPosition = 200.f * math::up,
         .cameraRotation = initial_camera_rotation,
     });
 

@@ -209,7 +209,7 @@ static void loadRenderObjects(render::RenderManager &render_mgr)
     render_asset_paths[(size_t)SimObject::Cube] =
         (std::filesystem::path(DATA_DIR) / "cube_render.obj").string();
     render_asset_paths[(size_t)SimObject::Agent] =
-        (std::filesystem::path(DATA_DIR) / "agent_render.obj").string();
+        (std::filesystem::path(DATA_DIR) / "cube_render.obj").string();
     render_asset_paths[(size_t)SimObject::Plane] =
         (std::filesystem::path(DATA_DIR) / "plane.obj").string();
     render_asset_paths[(size_t)SimObject::StopSign] =
@@ -232,7 +232,7 @@ static void loadRenderObjects(render::RenderManager &render_mgr)
 
     auto materials = std::to_array<imp::SourceMaterial>({
         { render::rgb8ToFloat(191, 108, 10), -1, 0.8f, 1.0f },
-        { math::Vector4{0.4f, 0.4f, 0.4f, 0.0f}, -1, 0.8f, 0.2f,},
+        { math::Vector4{0.4f, 0.4f, 0.4f, 0.0f}, -1, 0.8f, 10.0f,},
         { math::Vector4{1.f, 1.f, 1.f, 0.0f}, 1, 0.5f, 1.0f,},
         { render::rgb8ToFloat(230, 230, 230),   -1, 0.8f, 1.0f },
         { math::Vector4{0.5f, 0.3f, 0.3f, 0.0f},  0, 0.8f, 0.2f,},
@@ -244,9 +244,9 @@ static void loadRenderObjects(render::RenderManager &render_mgr)
 
     // Override materials
     render_assets->objects[(CountT)SimObject::Cube].meshes[0].materialIDX = 0;
-    render_assets->objects[(CountT)SimObject::Agent].meshes[0].materialIDX = 2;
-    render_assets->objects[(CountT)SimObject::Agent].meshes[1].materialIDX = 3;
-    render_assets->objects[(CountT)SimObject::Agent].meshes[2].materialIDX = 3;
+    render_assets->objects[(CountT)SimObject::Agent].meshes[0].materialIDX = 1;
+    // render_assets->objects[(CountT)SimObject::Agent].meshes[1].materialIDX = 3;
+    // render_assets->objects[(CountT)SimObject::Agent].meshes[2].materialIDX = 3;
     render_assets->objects[(CountT)SimObject::Plane].meshes[0].materialIDX = 4;
     render_assets->objects[(CountT)SimObject::StopSign].meshes[0].materialIDX = 7;
     render_assets->objects[(CountT)SimObject::SpeedBump].meshes[0].materialIDX = 8;
@@ -270,7 +270,7 @@ static void loadPhysicsObjects(PhysicsLoader &loader)
     asset_paths[(size_t)SimObject::Cube] =
         (std::filesystem::path(DATA_DIR) / "cube_collision.obj").string();
     asset_paths[(size_t)SimObject::Agent] =
-        (std::filesystem::path(DATA_DIR) / "agent_collision_simplified.obj").string();
+        (std::filesystem::path(DATA_DIR) / "cube_collision.obj").string();
     asset_paths[(size_t)SimObject::StopSign] =
         (std::filesystem::path(DATA_DIR) / "cube_collision.obj").string();
     asset_paths[(size_t)SimObject::SpeedBump] =
