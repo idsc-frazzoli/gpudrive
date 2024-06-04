@@ -1,5 +1,5 @@
 """Base Gym Environment that interfaces with the GPU Drive simulator."""
-
+import time
 from gymnasium.spaces import Box, Discrete
 import numpy as np
 import torch
@@ -167,7 +167,11 @@ class Env(gym.Env):
         if actions is not None:
             self._apply_actions(actions)
 
+        t = time.perf_counter()
         self.sim.step()
+        if actions is not None:
+            final_time = time.perf_counter() - t
+            print("step fps is ", self.cont_agent_mask.sum().item() / (final_time))
 
     def _apply_actions(self, actions):
         """Apply the actions to the simulator."""

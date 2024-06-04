@@ -44,13 +44,13 @@ class ExperimentConfig:
     clip_range: float = 0.2
     vf_coef: float = 0.5
     n_steps: int = 92  # Has to be at least > episode_length = 91
-    batch_size: int = 2048
+    batch_size: int = 8192
     verbose: int = 0
     total_timesteps: int = 3e8
     ent_coef: float = 0.001
     vf_coef: float = 0.5
-    lr: float = 3e-4
-    n_epochs: int = 5
+    lr: float = 1e-3
+    n_epochs: int = 2
 
     # NETWORK
     mlp_class = LateFusionNet

@@ -1,4 +1,5 @@
 """Vectorized environment wrapper for multi-agent environments."""
+import time
 import logging
 from typing import Optional, Sequence
 import torch
@@ -131,6 +132,7 @@ class SB3MultiAgentEnv(VecEnv):
             agent is done. After that, we return nan for the rewards, infos
             and done for that agent until the end of the episode.
         """
+        t_total = time.perf_counter()
         # reset the info dict
         self.info_dict = {}
 
@@ -138,11 +140,15 @@ class SB3MultiAgentEnv(VecEnv):
         self.actions_tensor[self.controlled_agent_mask] = actions
 
         # Step the environment
+        t_step_dyn = time.perf_counter()
         self._env.step_dynamics(self.actions_tensor)
+        print("step dynamics time", time.perf_counter() - t_step_dyn)
 
+        t_step_tuple = time.perf_counter()
         reward = self._env.get_rewards()
         done = self._env.get_dones()
         info = self._env.get_infos()
+        print("step tuple time", time.perf_counter() - t_step_tuple)
         # Get the dones for resets
         # done = self._env.get_dones()
         # Reset any of the worlds that are done
@@ -154,15 +160,20 @@ class SB3MultiAgentEnv(VecEnv):
             == self.controlled_agent_mask.sum(dim=1)
         )[0]
 
+        t_reset = time.perf_counter()
         if done_worlds.any().item():
             self._update_info_dict(info, done_worlds)
             for world_idx in done_worlds:
                 self.num_episodes += 1
                 self._env.sim.reset(world_idx.item())
 
+        print("reset time", time.perf_counter() - t_reset)
+        t_obs = time.perf_counter()
         # now construct obs after the reset
         obs = self._env.get_obs()
+        print("obs time", time.perf_counter() - t_obs)
 
+        t_nans = time.perf_counter()
         # Override nan placeholders for alive agents
         self.buf_rews[self.dead_agent_mask] = torch.nan
         self.buf_rews[~self.dead_agent_mask] = reward[~self.dead_agent_mask]
@@ -186,8 +197,10 @@ class SB3MultiAgentEnv(VecEnv):
             ].clone()
             self.tot_reward_per_episode[done_worlds] = 0
             self.agent_step[done_worlds] = 0
+        print("nans time", time.perf_counter() - t_nans)
 
-        return (
+        t_res = time.perf_counter()
+        res =  (
             obs[self.controlled_agent_mask]
             .reshape(self.num_envs, self.obs_dim)
             .clone(),
@@ -201,6 +214,9 @@ class SB3MultiAgentEnv(VecEnv):
             .reshape(self.num_envs, self.info_dim)
             .clone(),
         )
+        print("res time", time.perf_counter() - t_res)
+        print("total time", time.perf_counter() - t_total)
+        return res
 
     def close(self) -> None:
         """Close the environment."""
