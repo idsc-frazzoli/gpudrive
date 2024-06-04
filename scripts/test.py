@@ -21,6 +21,7 @@ sim = gpudrive.SimManager(
     exec_mode=gpudrive.madrona.ExecMode.CPU,
     gpu_id=0,
     num_worlds=1,
+    auto_reset=True,
     json_path="nocturne_data",
     params=params,
     enable_batch_renderer=True, # Optional parameter

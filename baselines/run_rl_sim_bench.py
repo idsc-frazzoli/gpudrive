@@ -36,6 +36,7 @@ if __name__ == "__main__":
             max_cont_agents=MAX_CONT_AGENTS,
             data_dir=data_dir,
             device="cuda",
+            auto_reset=True,
         )
 
         model = IPPO(

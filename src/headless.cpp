@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
         .execMode = exec_mode,
         .gpuID = 0,
         .numWorlds = (uint32_t)num_worlds,
+        .autoReset = false,
         .jsonPath = "../maps.16",
         .params = {
             .polylineReductionThreshold = 1.0,
