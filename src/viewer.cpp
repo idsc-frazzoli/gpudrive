@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         .execMode = exec_mode,
         .gpuID = 0,
         .numWorlds = num_worlds,
-        .autoReset = true,
+        .autoReset = replay_log.has_value(),
         .jsonPath = "/home/aarav/nocturne_data/formatted_json_v2_no_tl_valid",
         .params = {
             .polylineReductionThreshold = 1.0,
