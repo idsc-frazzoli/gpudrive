@@ -162,7 +162,7 @@ class IPPO(PPO):
             self._last_episode_starts = dones
 
         elapsed_time = time.perf_counter() - time_rollout
-        fps = observed_samples / elapsed_time
+        fps = observed_samples / total_step_time
         self.logger.record("rollout/fps", fps)
         print("total step time", total_step_time)
         print("total add buffer time", total_add_buffer_time)

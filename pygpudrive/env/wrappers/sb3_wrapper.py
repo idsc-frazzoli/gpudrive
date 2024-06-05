@@ -164,12 +164,12 @@ class SB3MultiAgentEnv(VecEnv):
         obs = self._env.get_obs()
 
         # Override nan placeholders for alive agents
-        self.buf_rews[self.dead_agent_mask] = torch.nan
-        self.buf_rews[~self.dead_agent_mask] = reward[~self.dead_agent_mask]
-        self.buf_dones[self.dead_agent_mask] = torch.nan
-        self.buf_dones[~self.dead_agent_mask] = done[~self.dead_agent_mask].to(
-            torch.float32
-        )
+        # self.buf_rews[self.dead_agent_mask] = torch.nan
+        # self.buf_rews[~self.dead_agent_mask] = reward[~self.dead_agent_mask]
+        # self.buf_dones[self.dead_agent_mask] = torch.nan
+        # self.buf_dones[~self.dead_agent_mask] = done[~self.dead_agent_mask].to(
+        #     torch.float32
+        # )
 
         # Store running total reward across worlds
         self.tot_reward_per_episode += reward * ~self.dead_agent_mask
@@ -191,10 +191,10 @@ class SB3MultiAgentEnv(VecEnv):
             obs[self.controlled_agent_mask]
             .reshape(self.num_envs, self.obs_dim)
             .clone(),
-            self.buf_rews[self.controlled_agent_mask]
+            reward[self.controlled_agent_mask]
             .reshape(self.num_envs)
             .clone(),
-            self.buf_dones[self.controlled_agent_mask]
+            done[self.controlled_agent_mask]
             .reshape(self.num_envs)
             .clone(),
             info[self.controlled_agent_mask]
