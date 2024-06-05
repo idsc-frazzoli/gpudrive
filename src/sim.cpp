@@ -150,6 +150,8 @@ inline void collectObservationsSystem(Engine &ctx,
     auto hasCollided = collisionEvent.hasCollided.load_relaxed();
     self_obs.collisionState = hasCollided ? 1.f : 0.f;
 
+    if(ctx.data().params.disableClassicalObs)
+        return;
 
     CountT arrIndex = 0; CountT agentIdx = 0;
     while(agentIdx < ctx.data().numAgents - 1)
@@ -264,7 +266,14 @@ inline void movementSystem(Engine &e,
         }
     }
 
-    if(done.v && responseType != ResponseType::Static)
+    if(responseType == ResponseType::Static)
+    {
+        // Do nothing. The agent is static.
+        // Agent can only be static if initAgentsAsStatic is set to true.
+        return;
+    }
+
+    if(done.v)
     {
         // Case: Agent has not collided but is done. 
         // This can only happen if the agent has reached goal or the episode has ended.
