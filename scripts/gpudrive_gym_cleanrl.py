@@ -71,8 +71,15 @@ class GPUDriveEnv(gym.Env):
     def setup_discrete_actions(self):
         """Configure the discrete action space."""
 
-        self.steer_actions = torch.tensor([-0.6, 0, 0.6], device=self.self_obs_tensor.device)
-        self.accel_actions = torch.tensor([-5 ,-3, -1, 0.5, 0.1, 0, 0.1, 0.5, 1, 3, 5], device=self.self_obs_tensor.device)
+        # self.steer_actions = torch.tensor([-0.6, 0.3, 0.1, 0, 0.1,0.3, 0.6], device=self.self_obs_tensor.device)
+        self.steer_actions: torch.Tensor = torch.round(
+            torch.linspace(-1.0, 1.0, 13), decimals=3
+        )
+        # self.accel_actions = torch.tensor([-5 ,-3, -1, 0.5, 0.1, 0, 0.1, 0.5, 1, 3, 5], device=self.self_obs_tensor.device)
+        self.accel_actions: torch.Tensor = torch.round(
+            torch.linspace(-4.0, 4.0, 7), decimals=3
+        )
+
         self.head_actions = torch.tensor([0], device = self.self_obs_tensor.device)
 
         # Create a mapping from action indices to action values
@@ -125,6 +132,8 @@ class GPUDriveEnv(gym.Env):
         if self.obs_type == 'lidar':
             self.lidar_tensor = self.sim.lidar_tensor().to_torch()
 
+            self.self_obs_shape = np.prod(self.self_obs_tensor.shape[2:])
+            self.lidar_shape = np.prod(self.lidar_tensor.shape[2:])
 
             self.obs_tensors = [
                 self.self_obs_tensor.view(self.batch_size, *self.self_obs_tensor.shape[2:]),

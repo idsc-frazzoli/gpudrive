@@ -16,11 +16,11 @@ from rich.console import Console
 
 import cleanrl
 from gpudrive_gym_cleanrl import GPUDriveEnv, make_gpudrive
-from policies import LinearMLP, MultiHeadLinear
+from policies import LinearMLP, MultiHeadLinear, MultiHeadLinearLidar
 
 def make_policy(env):
     # return LinearMLP(env)
-    return MultiHeadLinear(env)
+    return MultiHeadLinearLidar(env)
 
 def init_wandb(config, name, id=None, resume=True):
     #os.environ["WANDB_SILENT"] = "true"
@@ -73,7 +73,8 @@ def train(args):
 
     env = make_gpudrive(config)
     policy = make_policy(env)
-    args.wandb.watch(policy)
+    if args.track:
+        args.wandb.watch(policy)
     print(policy)
     for name, param in policy.named_parameters():
         param.register_hook(check_for_nan)
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('--wandb-entity', type=str, default='pandya-aarav-97', help='WandB entity')
     parser.add_argument('--wandb-project', type=str, default='GPUDriveCleanRL', help='WandB project')
     parser.add_argument('--wandb-group', type=str, default='debug', help='WandB group')
-    parser.add_argument('--track', action='store_true', default=True, help='Track on WandB')
+    parser.add_argument('--track', action='store_true', default=False, help='Track on WandB')
 
     args = parser.parse_args()
     config = Box(yaml.safe_load(open('config.yaml', 'r')))

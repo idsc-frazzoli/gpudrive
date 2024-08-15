@@ -192,7 +192,9 @@ class MultiHeadLinear(nn.Module):
         self.critic = self.build_network(env, hidden_size, 1, is_actor=False)
 
         if self.action_space_type == "discrete":
-            self.actor = self.build_network(env, hidden_size, hidden_size, is_actor=True)
+            self.actor = nn.Sequential(
+                layer_init(nn.Linear(hidden_size, env.discrete_action_space.n)),
+            )
 
         if self.action_space_type == "continuous":
             self.mean = layer_init(nn.Linear(output_size, env.single_action_space.shape[-1]), std=0.01)
@@ -206,8 +208,8 @@ class MultiHeadLinear(nn.Module):
         ]
         if is_actor:
             if self.action_space_type == "discrete":
-                layers.append(layer_init(nn.Linear(output_size, env.discrete_action_space.n), std=0.01))
-                # layers.append(nn.Softmax(dim=-1))
+                layers.append(layer_init(nn.Linear(output_size, env.discrete_action_space.n)))
+                layers.append(nn.Softmax(dim=-1))
         return nn.Sequential(*layers)
     
     def get_actor_logits(self, x) -> Union[torch.Tensor, List[torch.Tensor]]:
@@ -237,4 +239,89 @@ class MultiHeadLinear(nn.Module):
         partner_embed = self.partner_obs_embed(env_outputs[:,self.self_obs:self.partner_obs+self.self_obs])
         map_embed = self.map_obs_embed(env_outputs[:,self.self_obs+self.partner_obs:])
         proj = self.proj(torch.cat([obs_embed, partner_embed, map_embed], dim=-1))
+        return self.get_action_and_value(proj, action)
+    
+
+class MultiHeadLinearLidar(nn.Module):
+    def __init__(self, env, input_size = 64, hidden_size=32, output_size=32, **kwargs):
+        '''The CleanRL default Atari policy: a stack of three convolutions followed by a linear layer
+
+        Takes framestack as a mandatory keyword argument. Suggested default is 1 frame
+        with LSTM or 4 frames without.'''
+        super().__init__()
+
+        self.action_space_type = env.unwrapped.action_space_type
+        self.num_features = env.unwrapped.num_obs_features
+        self.self_obs = env.unwrapped.self_obs_shape
+        self.lidar_shape = env.unwrapped.lidar_shape
+        self.device = env.device
+
+        self.self_obs_embed = nn.Sequential(
+            nn.LayerNorm(self.self_obs),
+            layer_init(nn.Linear(self.self_obs, input_size)),
+            nn.Tanh()
+        )
+
+        self.lidar_obs_embed = nn.Sequential(
+            nn.LayerNorm(self.lidar_shape),
+            layer_init(nn.Linear(self.lidar_shape, input_size)),
+            nn.Tanh()
+        )
+
+
+        self.proj = nn.Sequential(
+            nn.LayerNorm(input_size*2),
+            layer_init(nn.Linear(input_size*2, hidden_size)),
+            nn.Tanh()
+        )
+        
+        self.critic = self.build_network(env, hidden_size, 1, is_actor=False)
+
+        if self.action_space_type == "discrete":
+            self.actor = nn.Sequential(
+                layer_init(nn.Linear(hidden_size, env.discrete_action_space.n)),
+            )
+
+        if self.action_space_type == "continuous":
+            self.mean = layer_init(nn.Linear(output_size, env.single_action_space.shape[-1]), std=0.01)
+            self.log_std = nn.Parameter(torch.zeros(env.single_action_space.shape[-1]))
+
+                
+    def build_network(self, env, hidden_size, output_size, is_actor):
+        layers = [
+            layer_init(nn.Linear(hidden_size, output_size, bias=True)),
+            nn.Tanh()
+        ]
+        if is_actor:
+            if self.action_space_type == "discrete":
+                layers.append(layer_init(nn.Linear(output_size, env.discrete_action_space.n)))
+                layers.append(nn.Softmax(dim=-1))
+        return nn.Sequential(*layers)
+    
+    def get_actor_logits(self, x) -> Union[torch.Tensor, List[torch.Tensor]]:
+        if self.action_space_type == "discrete":
+            return self.actor(x)
+        else:
+            mean = self.mean(x)
+            return [mean, self.log_std]
+
+    def get_value(self, x, state=None):
+        value = self.critic(x)
+        return value
+
+    def get_action_and_value(self, x, action=None):
+        x = x.to(self.device)
+        logits = self.get_actor_logits(x)
+        if self.action_space_type == "discrete":
+            action, logprob, entropy = sample_discrete_actions(logits, action) # type: ignore
+        else:
+            action, logprob, entropy = sample_continuous_actions(logits, action) # type: ignore
+        value = self.critic(x)
+        return action, logprob, entropy, value
+
+    def forward(self, env_outputs, action=None):
+        '''Forward pass for PufferLib compatibility'''
+        obs_embed = self.self_obs_embed(env_outputs[:,:self.self_obs])
+        lidar_embed = self.lidar_obs_embed(env_outputs[:,self.self_obs:])
+        proj = self.proj(torch.cat([obs_embed, lidar_embed], dim=-1))
         return self.get_action_and_value(proj, action)
