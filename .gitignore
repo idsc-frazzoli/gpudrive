@@ -5,12 +5,11 @@
 /CMakeSettings.json
 /scripts/__pycache__
 /train_src/madrona_escape_room_learn/__pycache__
-/waymo_data*
 .vscode/launch.json
 .vscode/settings.json
 .vscode/tasks.json
+
 /examples/benchmarks/results/
-/maps_16/
 /baselines/ippo/logs/*
 
 *.sif
@@ -26,10 +25,8 @@
 # Data
 hpc/overlay*
 /maps_*/*
-/formatted_json_v2_no_tl_train
-/formatted_json_v2_no_tl_valid/*
-/waymo_data_new
-/maps_16
+*/formatted_json_v2_no_tl_train/*
+*/formatted_json_v2_no_tl_valid/*
 **/*ppo_model*/
 /wandb*
 /videos/*
