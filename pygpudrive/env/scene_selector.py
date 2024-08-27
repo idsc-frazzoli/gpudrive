@@ -4,7 +4,6 @@ from math import ceil
 from pygpudrive.env.config import SelectionDiscipline
 
 
-
 def select_scenes(config):
     """Selects a number of traffic scenes from the data directory based on the specified discipline.
 
