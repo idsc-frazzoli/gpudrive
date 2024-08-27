@@ -1,15 +1,16 @@
-"""Base Gym Environment that interfaces with the GPU Drive simulator."""
+"""Torch Gym Environment that interfaces with the GPU Drive simulator."""
 
 from gymnasium.spaces import Box, Discrete
 import numpy as np
 import torch
-import copy
 import gpudrive
 import imageio
 from itertools import product
 
 from pygpudrive.env.config import EnvConfig, RenderConfig, SceneConfig
 from pygpudrive.env.base_env import GPUDriveGymEnv
+
+EPISODE_LEN = 91
 
 
 class GPUDriveTorchEnv(GPUDriveGymEnv):
@@ -57,6 +58,11 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
     def reset(self):
         """Reset the worlds and return the initial observations."""
         self.sim.reset(list(range(self.num_worlds)))
+
+        # If there are warmup steps (by default, init_steps=0),
+        # advance the simulator before returning the first observation
+        self._update_sim_with_warmup(self.config.init_steps)
+
         return self.get_obs()
 
     def get_dones(self):
@@ -75,7 +81,6 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         return self.sim.reward_tensor().to_torch().squeeze(dim=2)
 
     def step_dynamics(self, actions):
-
         if actions is not None:
             self._apply_actions(actions)
         self.sim.step()
@@ -94,7 +99,8 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
                 action_value_tensor = self.action_keys_tensor[actions]
             elif (
                 actions.shape[2] == 3
-            ):  # Assuming we are given the actual action values (acceleration, steering, heading)
+            ):  # Assuming we are given the actual action values
+                # (acceleration, steering, heading)
                 action_value_tensor = actions.to(self.device)
         else:
             raise ValueError(f"Invalid action shape: {actions.shape}")
@@ -131,7 +137,8 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         return Discrete(n=int(len(self.action_key_to_values)))
 
     def get_obs(self):
-        """Get observation: Combine different types of environment information into a single tensor.
+        """Get observation: Combine different types of environment information
+        into a single tensor.
 
         Returns:
             torch.Tensor: (num_worlds, max_agent_count, num_features)
@@ -195,6 +202,21 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
 
         return obs_filtered
 
+    def _update_sim_with_warmup(self, num_steps=0):
+        """Advances the simulator by num_steps.
+
+        Args:
+            num_steps (int): Number of warmup steps to perform.
+        """
+        if num_steps >= EPISODE_LEN:
+            raise ValueError(
+                "The length of the expert trajectory is 91,"
+                "so num_steps should be less than 91."
+            )
+
+        for _ in range(num_steps):
+            self.sim.step()
+
     def get_controlled_agents_mask(self):
         """Get the control mask."""
         return (self.sim.controlled_state_tensor().to_torch() == 1).squeeze(
@@ -230,7 +252,12 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
     def normalize_and_flatten_partner_obs(self, obs):
         """Normalize partner state features.
         Args:
-            obs: torch.Tensor of shape (num_worlds, kMaxAgentCount, kMaxAgentCount - 1, num_features)
+            obs: torch.Tensor of shape (
+                num_worlds,
+                kMaxAgentCount,
+                kMaxAgentCount - 1,
+                num_features
+            )
         """
 
         # TODO: Fix (there should not be nans in the obs)
@@ -315,6 +342,13 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         )
         return one_hot_object_type
 
+    @property
+    def step_in_episode(self):
+        return (
+            EPISODE_LEN
+            - self.sim.steps_remaining_tensor().to_torch().flatten()[0].item()
+        )
+
     def normalize_and_flatten_map_obs(self, obs):
         """Normalize map observation features."""
 
@@ -357,10 +391,9 @@ if __name__ == "__main__":
     MAX_NUM_OBJECTS = 128
     NUM_WORLDS = 50
 
-    env_config = EnvConfig()
-    env_config = EnvConfig()
+    env_config = EnvConfig(init_steps=10)
     render_config = RenderConfig()
-    scene_config = SceneConfig("data", NUM_WORLDS)
+    scene_config = SceneConfig("data/examples", NUM_WORLDS)
 
     # MAKE ENV
     env = GPUDriveTorchEnv(
@@ -376,6 +409,8 @@ if __name__ == "__main__":
     frames = []
 
     for _ in range(TOTAL_STEPS):
+
+        print(f"Start episode at t = {env.step_in_episode}")
 
         # Take a random actions
         rand_action = torch.Tensor(
@@ -393,7 +428,6 @@ if __name__ == "__main__":
         frames.append(env.render())
 
         obs = env.get_obs()
-
         reward = env.get_rewards()
         done = env.get_dones()
 
