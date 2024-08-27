@@ -1,5 +1,6 @@
 import random
 import os
+import numpy as np
 from math import ceil
 from pygpudrive.env.config import SelectionDiscipline
 
@@ -49,7 +50,7 @@ def select_scenes(config):
             selected_scenes = all_scenes
         case SelectionDiscipline.K_UNIQUE_N:
             assert (
-                config.k_unique_scenes > 0
+                config.k_unique_scenes > 0 or config.k_unique_scenes is None
             ), "K_UNIQUE_N discipline requires specifying positive value for K"
             selected_scenes = repeat_to_N(
                 random_sample(config.k_unique_scenes)
@@ -60,7 +61,11 @@ def select_scenes(config):
             "The selected scene is not a traffic scenario. Something went wrong with the scene selection. Please check your data path."
         )
 
-    return [
+    scene_paths = [
         os.path.join(os.path.abspath(config.path), selected_scene)
         for selected_scene in selected_scenes
-    ]
+    ] 
+    
+    print(f'\n--- Ratio unique scenes / number of worls = {len(np.unique(scene_paths))} / {len(scene_paths)} ---\n')
+        
+    return scene_paths
