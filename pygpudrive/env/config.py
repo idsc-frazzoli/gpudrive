@@ -45,16 +45,51 @@ class EnvConfig:
     # Scene configuration
     remove_non_vehicles: bool = True  # Remove non-vehicle entities from the scene
 
-    # Reward settings
-    reward_type: str = "sparse_on_goal_achieved"  # Options: "sparse_on_goal_achieved"
-    dist_to_goal_threshold: float = 3.0  # Radius around goal considered as "goal achieved"
+    # Reward
+    reward_type: str = "weighted_combination" # options: "sparse_on_goal_achieved" / "weighted_combination"
 
-    # C++ and Python shared settings (modifiable via C++ codebase)
-    max_num_agents_in_scene: int = gpudrive.kMaxAgentCount  # Max number of objects in simulation
-    max_num_rg_points: int = gpudrive.kMaxRoadEntityCount  # Max number of road graph segments
-    roadgraph_top_k: int = gpudrive.kMaxAgentMapObservationsCount  # Top-K road graph segments agents can view
-    episode_len: int = gpudrive.episodeLen  # Length of an episode in the simulator
+    # Set the weights for the reward components
+    # R = a * collided + b * goal_achieved + c * off_road
+    collision_weight = -1.0
+    goal_achieved_weight = 1.0
+    off_road_weight = -1.0
+    
+    # The radius around the goal point within which the agent is considered
+    # to have reached the goal
+    dist_to_goal_threshold: float = 3.0
 
+    # Maximum number of controlled vehicles and feature dimensions for network
+    MAX_CONTROLLED_VEHICLES: int = 128
+    ROADMAP_AGENT_FEAT_DIM: int = MAX_CONTROLLED_VEHICLES - 1
+    TOP_K_ROADPOINTS: int = (
+        200  # Number of visible roadpoints from the road graph
+    )
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # VALUES BELOW ARE ENV CONSTANTS: DO NOT CHANGE # #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # Normalization constants
+    max_speed: int = 100
+    max_veh_len: int = 30
+    max_veh_width: int = 10
+    min_rel_goal_coord: int = -1000
+    max_rel_goal_coord: int = 1000
+    min_rel_agent_pos: int = -1000
+    max_rel_agent_pos: int = 1000
+    max_orientation_rad: float = 2 * np.pi
+    min_rm_coord: int = -1000
+    max_rm_coord: int = 1000
+    max_road_line_segmment_len: int = 100
+    max_road_scale: int = 100
+
+    # Feature dimensions
+    EGO_STATE_DIM = 6 if ego_state else 0
+    PARTNER_DIM = 10 if partner_obs else 0
+    ROAD_MAP_DIM = 13 if road_map_obs else 0
+    
+    # Agent tensor shape set in consts.hpp (kMaxAgentCount)
+    k_max_agent_count: int = 128
+    
 class SelectionDiscipline(Enum):
     """Enum for selecting scenes discipline in dataset configuration."""
     FIRST_N = 0
