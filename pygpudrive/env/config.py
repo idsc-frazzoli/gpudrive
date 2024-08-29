@@ -47,12 +47,6 @@ class EnvConfig:
 
     # Reward
     reward_type: str = "weighted_combination" # options: "sparse_on_goal_achieved" / "weighted_combination"
-
-    # Set the weights for the reward components
-    # R = a * collided + b * goal_achieved + c * off_road
-    collision_weight = -1.0
-    goal_achieved_weight = 1.0
-    off_road_weight = -1.0
     
     # The radius around the goal point within which the agent is considered
     # to have reached the goal
