@@ -39,9 +39,7 @@ class EnvConfig:
     # Road observation algorithm settings
     road_obs_algorithm: str = "linear"  # Algorithm for road observations
     obs_radius: float = 100.0  # Radius for road observations
-    polyline_reduction_threshold: float = (
-        1.0  # Threshold for polyline reduction
-    )
+    polyline_reduction_threshold: float = 1.0  
 
     # Action space settings (joint discrete)
     steer_actions: torch.Tensor = torch.round(
@@ -55,13 +53,11 @@ class EnvConfig:
     collision_behavior: str = "remove"  # Options: "remove", "stop", "ignore"
 
     # Scene configuration
-    remove_non_vehicles: bool = (
-        True  # Remove non-vehicle entities from the scene
-    )
+    remove_non_vehicles: bool = True # Remove non-vehicle agents from scene
 
     # Reward settings
     reward_type: str = (
-        "sparse_on_goal_achieved"  # Options: "sparse_on_goal_achieved"
+        "sparse_on_goal_achieved", # Alternatively, "weighted_combination" 
     )
     dist_to_goal_threshold: float = (
         3.0  # Radius around goal considered as "goal achieved"
