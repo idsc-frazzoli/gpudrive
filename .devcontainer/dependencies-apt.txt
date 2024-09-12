@@ -1,0 +1,13 @@
+build-essential
+wget
+# cmake
+
+# madrona
+libxrandr-dev
+libxinerama-dev
+libxcursor-dev
+libxi-dev
+libxrender-dev
+libwayland-dev
+libxkbcommon-dev 
+xorg-dev
